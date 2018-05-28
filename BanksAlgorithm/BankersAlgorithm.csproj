@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{3FA0B63A-242F-4DE9-8466-56DC53DFE6B7}</ProjectGuid>
+    <ProjectGuid>{A6D54DD8-2796-4EA3-913C-DD8704AB499A}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>OS</RootNamespace>
-    <AssemblyName>OS</AssemblyName>
+    <RootNamespace>BankersAlgorithm</RootNamespace>
+    <AssemblyName>BankersAlgorithm</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
