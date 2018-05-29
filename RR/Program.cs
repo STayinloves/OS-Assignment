@@ -54,9 +54,9 @@ namespace RR
                 var currentJob = readyList.First();
                 readyList.RemoveAt(0);
 
-                if ((currentJob.runAmount += timePiece) >= currentJob.ServiceTime)
+                if ((currentJob.RunAmount += timePiece) >= currentJob.ServiceTime)
                 {
-                    var overuse = currentJob.runAmount - currentJob.ServiceTime;
+                    var overuse = currentJob.RunAmount - currentJob.ServiceTime;
                     var endTime = currentTime + timePiece - overuse;
                     currentJob.WaitTime = endTime - currentJob.ArrivalTime;
 
@@ -107,7 +107,7 @@ namespace RR
 
             public int WaitTime { get; set; }
 
-            public int runAmount { get; set; }
+            public int RunAmount { get; set; }
         }
     }
 }
