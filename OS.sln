@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileSystem", "FileSystem\Fi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PageReplacement", "LRU\PageReplacement.csproj", "{1B9919D7-18F3-4591-AF06-F8CA670F87FA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Disk", "Disk\Disk.csproj", "{595A3040-3F62-4234-8856-4D03751E3AB4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +43,10 @@ Global
 		{1B9919D7-18F3-4591-AF06-F8CA670F87FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1B9919D7-18F3-4591-AF06-F8CA670F87FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1B9919D7-18F3-4591-AF06-F8CA670F87FA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{595A3040-3F62-4234-8856-4D03751E3AB4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{595A3040-3F62-4234-8856-4D03751E3AB4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{595A3040-3F62-4234-8856-4D03751E3AB4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{595A3040-3F62-4234-8856-4D03751E3AB4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
