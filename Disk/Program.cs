@@ -13,6 +13,9 @@ namespace Disk
             var diskRequestList = new List<int>{50, 40, 30, 18, 90, 100, 150, 300, 20, 200};
             const int currentDisk = 100;
 
+            Console.WriteLine(diskRequestList.Select(o => o.ToString()).Aggregate((a, b) => a + " " + b));
+            Console.WriteLine("Current postion: " + currentDisk);
+
             Console.WriteLine("Please input the algorithm's name. (FCFS SSTF SCAN CSCAN NSSCAN exit)");
             while (true)
             {
@@ -53,12 +56,13 @@ namespace Disk
             var moveQueue = new List<int>();
             var moveDistance = 0;
             var current = currentDisk;
+            var cnt = 0;
             foreach (var item in diskRequestList)
             {
                 moveDistance += Math.Abs(current - item);
                 current = item;
-                moveQueue.Add(current);
-            }
+                moveQueue.Add(cnt++);
+            } 
             ShowResult(moveQueue, moveDistance);
         }
 
@@ -84,7 +88,7 @@ namespace Disk
 
                 currentDisk = res.Item3;
                 moveDistance += res.Item3;
-                moveQueue.AddRange(res.Item1);
+                moveQueue.AddRange(res.Item1.Select(o => o + count));
 
                 count += range;
             }
@@ -99,31 +103,32 @@ namespace Disk
             var moveDistance = 0;
             var current = currentDisk;
 
-            var orderList = new List<int>();
+            var orderList = new List<Tuple<int, int>>();
+            var cnt = 0;
             foreach (var item in diskRequestList)
             {
-                orderList.Add(item);
+                orderList.Add(Tuple.Create(item, cnt++));
             }
             orderList.Sort();
 
             var index = 0;
-            while (orderList[index] < current)
+            while (orderList[index].Item1 < current)
             {
                 index++;
             }
 
             for (var i = index; i < orderList.Count; i++)
             {
-                moveDistance += Math.Abs(orderList[i] - current);
-                current = orderList[i];
-                moveQueue.Add(current);
+                moveDistance += Math.Abs(orderList[i].Item1 - current);
+                current = orderList[i].Item1;
+                moveQueue.Add(orderList[i].Item2);
             }
 
             for (var i = 0; i < index; i++)
             {
-                moveDistance += Math.Abs(orderList[i] - current);
-                current = orderList[i];
-                moveQueue.Add(current);
+                moveDistance += Math.Abs(orderList[i].Item1 - current);
+                current = orderList[i].Item1;
+                moveQueue.Add(orderList[i].Item2);
             }
             ShowResult(moveQueue, moveDistance);
         }
@@ -135,24 +140,23 @@ namespace Disk
             var forward = true;
             var moveQueue = new List<int>();
             var moveDistance = 0;
+            var vis = Enumerable.Repeat(false, diskRequestList.Count).ToList();
 
-            while (diskRequestList.Count != 0)
+            while (moveQueue.Count != diskRequestList.Count)
             {
                 if (forward)
                 {
                     var temp = currentDisk;
                     var index = -1;
-                    diskRequestList.Select((o, i) =>
+
+                    for (int i = 0; i < diskRequestList.Count; i++)
                     {
-                        if (o >= temp)
+                        if (!vis[i] && diskRequestList[i] >= temp)
                         {
-                            temp = o;
+                            temp = diskRequestList[i];
                             index = i;
                         }
-
-                        return 0;
-                    });
-
+                    }
                     if (index == -1)
                     {
                         forward = false;
@@ -161,23 +165,23 @@ namespace Disk
                     {
                         moveDistance += Math.Abs(currentDisk - diskRequestList[index]);
                         currentDisk = diskRequestList[index];
-                        diskRequestList.RemoveAt(index);
+                        vis[index] = true;
+                        moveQueue.Add(index);
                     }
                 }
                 else
                 {
                     var temp = currentDisk;
                     var index = -1;
-                    diskRequestList.Select((o, i) =>
+
+                    for (int i = 0; i < diskRequestList.Count; i++)
                     {
-                        if (o <= temp)
+                        if (!vis[i] && diskRequestList[i] <= temp)
                         {
-                            temp = o;
+                            temp = diskRequestList[i];
                             index = i;
                         }
-
-                        return 0;
-                    });
+                    }
 
                     if (index == -1)
                     {
@@ -187,7 +191,8 @@ namespace Disk
                     {
                         moveDistance += Math.Abs(currentDisk - diskRequestList[index]);
                         currentDisk = diskRequestList[index];
-                        diskRequestList.RemoveAt(index);
+                        vis[index] = true;
+                        moveQueue.Add(index);
                     }
                 }
             }
@@ -203,7 +208,31 @@ namespace Disk
         //shortest Seek Time First
         private static void Sstf(List<int> diskRequestList, int currentDisk)
         {
-            throw new NotImplementedException();
+            var moveQueue = new List<int>();
+            var moveDistance = 0;
+            var vis = Enumerable.Repeat(false, diskRequestList.Count).ToList();
+
+            while (moveQueue.Count != diskRequestList.Count)
+            {
+                var temp = int.MaxValue;
+                var index = -1;
+
+                for (var i = 0; i < diskRequestList.Count; i++)
+                {
+                    if (!vis[i] && Math.Abs(diskRequestList[i] - currentDisk) <= temp)
+                    {
+                        temp = Math.Abs(diskRequestList[i] - currentDisk);
+                        index = i;
+                    }
+                }
+
+                moveDistance += temp;
+                currentDisk = diskRequestList[index];
+                vis[index] = true;
+                moveQueue.Add(index);
+            }
+
+            ShowResult(moveQueue, moveDistance);
         }
 
 
