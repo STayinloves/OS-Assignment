@@ -70,6 +70,7 @@ namespace FileSystem
                             MoveFileOrDirecotry(input);
                             break;
                         case "exit":
+                            // Exit Program
                             return;
                         default:
                             Console.WriteLine($"The term \'{cmd}\' is not recognized as the name of a function");
