@@ -18,24 +18,74 @@ namespace FileSystem
             Father = father;
             Name = name;
             Permission = permission;
+            ChildrenFiles = new Dictionary<string, FileNode>();
+            Content = "";
         }
+
 
         public string Name { get; set; }
         public string Content { get; set; }
         public PermissionType Permission { get; set; }
         public Dictionary<string, FileNode> ChildrenFiles { get; set; }
         public FileNode Father { get; }
+
+        public void AddChildrenFile(string name)
+        {
+            var child = new FileNode(this, name,
+                PermissionType.Read | PermissionType.Write);
+            if (ChildrenFiles.ContainsKey(name))
+            {
+                Console.WriteLine("File with the same filename exsits!");
+            }
+            else
+            {
+                ChildrenFiles.Add(name, child);
+            }
+        }
+
+        public void ShowBaseInfo()
+        {
+            var it = this;
+            var path = "";
+            do
+            {
+                path = it.Name + "/" + path;
+            } while (it.Father != null);
+
+            Console.Write("[" + path + "]");
+        }
+
+        public void ShowChildrenFiles()
+        {
+            Console.Write($"There is {ChildrenFiles.Count} file in ");
+            ShowBaseInfo();
+            Console.WriteLine();
+            foreach (var childrenFile in ChildrenFiles.Values)
+            {
+                var str = "";
+                if ((childrenFile.Permission & PermissionType.Excute) != 0)
+                {
+                    //TODO: add permission string
+                }
+                Console.WriteLine($"{childrenFile.Name}");
+            }
+        }
     }
 
     internal class Program
     {
-        private FileNode root =
-            new FileNode(null, "/", PermissionType.Excute | PermissionType.Read | PermissionType.Write);
+        private static readonly FileNode root =
+            new FileNode(null, "",
+                PermissionType.Excute | PermissionType.Read |
+                PermissionType.Write);
+
+        private static readonly FileNode current = root;
 
         private static void Main(string[] args)
         {
             while (true)
             {
+                current.ShowBaseInfo();
                 var input = Console.ReadLine()?.Trim().Split(' ');
                 if (input == null)
                 {
@@ -73,7 +123,8 @@ namespace FileSystem
                             // Exit Program
                             return;
                         default:
-                            Console.WriteLine($"The term \'{cmd}\' is not recognized as the name of a function");
+                            Console.WriteLine(
+                                $"The term \'{cmd}\' is not recognized as the name of a function");
                             break;
                     }
                 }
@@ -81,7 +132,8 @@ namespace FileSystem
                 {
                     if (e is NotImplementedException)
                     {
-                        Console.WriteLine($"The function \'{cmd}\' hasn't been implemented. O.o");
+                        Console.WriteLine(
+                            $"The function \'{cmd}\' hasn't been implemented. O.o");
                     }
                 }
             }
@@ -94,7 +146,7 @@ namespace FileSystem
 
         private static void ListDirectory(string[] param)
         {
-            throw new NotImplementedException();
+            current.ShowChildrenFiles();
         }
 
         private static void ChangePermission(string[] param)
@@ -109,7 +161,7 @@ namespace FileSystem
 
         private static void CreateFile(string[] param)
         {
-            throw new NotImplementedException();
+            current.AddChildrenFile(param[1]);
         }
 
         private static void MoveFileOrDirecotry(string[] param)

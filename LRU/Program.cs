@@ -11,7 +11,15 @@ namespace PageReplacement
         {
             Console.Write("Please input memory number N: ");
             int.TryParse(Console.ReadLine().Trim(), out var memoryNum);
-            var pageRefs = Console.ReadLine().Trim().Split(' ').Select(o => int.Parse(o)).ToList();
+
+            Console.WriteLine("Please input request array(enter to use example): ");
+            var input = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                input = "7 0 1 2 0 3 0 4 2 3 0 3 2 1 2 0 1 7 0 1";
+                Console.WriteLine("Example: " + input);
+            }
+            var pageRefs = input.Trim().Split(' ').Select(o => int.Parse(o)).ToList();
 
             Console.WriteLine("Please input the algorithm's name. (FIFO LRU CLOCK exit)");
             while (true)
@@ -231,7 +239,7 @@ namespace PageReplacement
             {
                 var hit = false;
                 var leastRecentUsedKey = -1;
-                foreach (var i in mem)
+                foreach (var i in mem.ToList())
                 {
                     if (i.Key == pageRef)
                     {
