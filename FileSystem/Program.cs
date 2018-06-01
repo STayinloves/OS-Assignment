@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace FileSystem
 {
@@ -29,45 +30,262 @@ namespace FileSystem
         public Dictionary<string, FileNode> ChildrenFiles { get; set; }
         public FileNode Father { get; }
 
-        public void AddChildrenFile(string name)
+        public bool AddChildrenFile(string name)
         {
             var child = new FileNode(this, name,
                 PermissionType.Read | PermissionType.Write);
             if (ChildrenFiles.ContainsKey(name))
             {
-                Console.WriteLine("File with the same filename exsits!");
+                Console.WriteLine("File with the same filename exists!");
+                return false;
+            }
+
+            ChildrenFiles.Add(name, child);
+            return true;
+        }
+
+        public bool AddChildrenDir(string name)
+        {
+            var child = new FileNode(this, name,
+                PermissionType.Read | PermissionType.Write | PermissionType.Excute);
+            if (ChildrenFiles.ContainsKey(name))
+            {
+                Console.WriteLine("Dir with the same pathname exists!");
+                return false;
+            }
+
+            ChildrenFiles.Add(name, child);
+            return true;
+        }
+
+        public bool FindChildDirectory(string name, out FileNode fn)
+        {
+            fn = this;
+            if (string.IsNullOrEmpty(name))
+            {
+                return true;
+            }
+
+            var paths = name.Split('/');
+            foreach (var path in paths)
+            {
+                var can = false;
+                switch (path)
+                {
+                    case "..":
+                        if (fn.Father != null)
+                        {
+                            fn = fn.Father;
+                            can = true;
+                        }
+
+                        break;
+                    case ".":
+                        if (fn.Father != null)
+                        {
+                            can = true;
+                        }
+
+                        break;
+                    default:
+                        if (fn.ChildrenFiles.ContainsKey(path) &&
+                            (fn.ChildrenFiles[path].Permission & PermissionType.Excute) != 0)
+                        {
+                            fn = fn.ChildrenFiles[path];
+                            can = true;
+                        }
+
+                        break;
+                }
+
+                if (!can)
+                {
+                    Console.WriteLine("Path donesn't exist!");
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        public void RemoveChild(string name)
+        {
+            if (!ChildrenFiles.ContainsKey(name))
+            {
+                Console.WriteLine($"File '{name}' doesn't exist!");
             }
             else
             {
-                ChildrenFiles.Add(name, child);
+                ChildrenFiles.Remove(name);
             }
+        }
+
+        public void MoveChild(string name, string newName)
+        {
+            if (!ChildrenFiles.ContainsKey(name))
+            {
+                Console.WriteLine($"File '{name}' doesn't exist!");
+            }
+            else if (name != newName)
+            {
+                var node = ChildrenFiles[name];
+                if ((node.Permission & PermissionType.Excute) != 0)
+                {
+                    if (AddChildrenDir(newName))
+                    {
+                        ChildrenFiles[newName] = node;
+                    }
+                }
+                else
+                {
+                    if (AddChildrenFile(newName))
+                    {
+                        ChildrenFiles[newName] = node;
+                    }
+                }
+
+                ChildrenFiles.Remove(name);
+            }
+        }
+
+        public void ChangePermission(string name, string op, string mod)
+        {
+            if (!ChildrenFiles.ContainsKey(name))
+            {
+                Console.WriteLine($"File '{name}' doesn't exist!");
+            }
+            else
+            {
+                var node = ChildrenFiles[name];
+                switch (op)
+                {
+                    case "-":
+                        if (mod.Contains("w"))
+                        {
+                            node.Permission &= ~PermissionType.Write;
+                        }
+
+                        if (mod.Contains("r"))
+                        {
+                            node.Permission &= ~PermissionType.Read;
+                        }
+
+                        break;
+                    case "+":
+                        if (mod.Contains("w"))
+                        {
+                            node.Permission |= PermissionType.Write;
+                        }
+
+                        if (mod.Contains("r"))
+                        {
+                            node.Permission |= PermissionType.Read;
+                        }
+
+                        break;
+                    case "=":
+                        if (mod.Contains("w"))
+                        {
+                            node.Permission &= ~PermissionType.Read;
+                            node.Permission = PermissionType.Write;
+                        }
+
+                        if (mod.Contains("r"))
+                        {
+                            node.Permission &= ~PermissionType.Write;
+                            node.Permission = PermissionType.Read;
+                        }
+
+                        break;
+                }
+            }
+        }
+
+        public void ShowContent()
+        {
+            Console.WriteLine(Content);
+        }
+
+        public void ShowChildContent(string name)
+        {
+            if (!ChildrenFiles.ContainsKey(name))
+            {
+                Console.WriteLine($"File '{name}' doesn't exist!");
+            }
+            else
+            {
+                ChildrenFiles[name].ShowContent();
+            }
+        }
+
+        public string PathInfo()
+        {
+            var it = this;
+            var path = it.Name;
+
+            while (it.Father != null)
+            {
+                it = it.Father;
+                path = it.Name + "/" + path;
+            }
+
+            return "~/" + path;
         }
 
         public void ShowBaseInfo()
         {
-            var it = this;
-            var path = "";
-            do
-            {
-                path = it.Name + "/" + path;
-            } while (it.Father != null);
+            var path = PathInfo();
+            Console.Write("[" + path + "]$");
+        }
 
-            Console.Write("[" + path + "]");
+        public void ShowPathInfo()
+        {
+            Console.WriteLine(PathInfo());
         }
 
         public void ShowChildrenFiles()
         {
-            Console.Write($"There is {ChildrenFiles.Count} file in ");
-            ShowBaseInfo();
-            Console.WriteLine();
+            Console.WriteLine($"There is {ChildrenFiles.Count} file in " + PathInfo());
             foreach (var childrenFile in ChildrenFiles.Values)
             {
                 var str = "";
                 if ((childrenFile.Permission & PermissionType.Excute) != 0)
                 {
-                    //TODO: add permission string
+                    str += "d";
                 }
-                Console.WriteLine($"{childrenFile.Name}");
+                else
+                {
+                    str += "-";
+                }
+
+                if ((childrenFile.Permission & PermissionType.Read) != 0)
+                {
+                    str += "r";
+                }
+                else
+                {
+                    str += "-";
+                }
+
+                if ((childrenFile.Permission & PermissionType.Write) != 0)
+                {
+                    str += "w";
+                }
+                else
+                {
+                    str += "-";
+                }
+
+                if ((childrenFile.Permission & PermissionType.Excute) != 0)
+                {
+                    str += "x";
+                }
+                else
+                {
+                    str += "-";
+                }
+
+                Console.WriteLine($"{str} {childrenFile.ChildrenFiles.Count} {childrenFile.Name}");
             }
         }
     }
@@ -79,14 +297,14 @@ namespace FileSystem
                 PermissionType.Excute | PermissionType.Read |
                 PermissionType.Write);
 
-        private static readonly FileNode current = root;
+        private static FileNode _current = root;
 
         private static void Main(string[] args)
         {
             while (true)
             {
-                current.ShowBaseInfo();
-                var input = Console.ReadLine()?.Trim().Split(' ');
+                _current.ShowBaseInfo();
+                var input = Console.ReadLine()?.Trim().Split(' ').Select(o => o.Trim()).ToArray();
                 if (input == null)
                 {
                     continue;
@@ -97,6 +315,9 @@ namespace FileSystem
                 {
                     switch (cmd)
                     {
+                        case "cd":
+                            ChangeDirectory(input);
+                            break;
                         case "cat":
                             CatenateFile(input);
                             break;
@@ -139,39 +360,54 @@ namespace FileSystem
             }
         }
 
+        private static void ChangeDirectory(string[] param)
+        {
+            if (param[1].StartsWith("/"))
+            {
+                if (root.FindChildDirectory(param[1].Substring(1), out var fn))
+                {
+                    _current = fn;
+                }
+            }
+            else if (_current.FindChildDirectory(param[1], out var fn))
+            {
+                _current = fn;
+            }
+        }
+
         private static void CatenateFile(string[] param)
         {
-            throw new NotImplementedException();
+            _current.ShowChildContent(param[1]);
         }
 
         private static void ListDirectory(string[] param)
         {
-            current.ShowChildrenFiles();
+            _current.ShowChildrenFiles();
         }
 
         private static void ChangePermission(string[] param)
         {
-            throw new NotImplementedException();
+            _current.ChangePermission(param[1], param[2], param[3]);
         }
 
         private static void CreateDirectory(string[] param)
         {
-            throw new NotImplementedException();
+            _current.AddChildrenDir(param[1]);
         }
 
         private static void CreateFile(string[] param)
         {
-            current.AddChildrenFile(param[1]);
+            _current.AddChildrenFile(param[1]);
         }
 
         private static void MoveFileOrDirecotry(string[] param)
         {
-            throw new NotImplementedException();
+            _current.MoveChild(param[1], param[2]);
         }
 
         private static void RemoveFileOrDirecotry(string[] param)
         {
-            throw new NotImplementedException();
+            _current.RemoveChild(param[1]);
         }
     }
 }
