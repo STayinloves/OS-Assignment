@@ -21,6 +21,9 @@ namespace FileSystem
             Permission = permission;
             ChildrenFiles = new Dictionary<string, FileNode>();
             Content = "";
+
+            ChildrenFiles.Add("..", father);
+            ChildrenFiles.Add(".", this);
         }
 
 
@@ -28,7 +31,7 @@ namespace FileSystem
         public string Content { get; set; }
         public PermissionType Permission { get; set; }
         public Dictionary<string, FileNode> ChildrenFiles { get; set; }
-        public FileNode Father { get; }
+        public FileNode Father { get; set; }
 
         public bool AddChildrenFile(string name)
         {
@@ -229,7 +232,7 @@ namespace FileSystem
                 path = it.Name + "/" + path;
             }
 
-            return "~/" + path;
+            return "~" + path;
         }
 
         public void ShowBaseInfo()
@@ -285,7 +288,17 @@ namespace FileSystem
                     str += "-";
                 }
 
-                Console.WriteLine($"{str} {childrenFile.ChildrenFiles.Count} {childrenFile.Name}");
+                var name = childrenFile.Name;
+                if (childrenFile == Father)
+                {
+                    name = "..";
+                }
+                else if (childrenFile == this)
+                {
+                    name = ".";
+                }
+
+                Console.WriteLine($"{str} {childrenFile.ChildrenFiles.Count} {name}");
             }
         }
     }
@@ -301,6 +314,9 @@ namespace FileSystem
 
         private static void Main(string[] args)
         {
+            // specially initialize root node
+            root.ChildrenFiles[".."] = root;
+
             while (true)
             {
                 _current.ShowBaseInfo();
