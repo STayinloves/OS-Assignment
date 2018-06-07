@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MemoryAllocationL
 {
@@ -21,10 +22,8 @@ namespace MemoryAllocationL
     {
         private const int MinSize = 2;
 
-        public static List<Partition>
-            FreePartitionTable = new List<Partition>();
-
-        public static int nextSearchPoint;
+        public static LinkedList<Partition>
+            FreePartitionTable = new LinkedList<Partition>();
 
         public static int NumberOfParition;
 
@@ -69,7 +68,14 @@ namespace MemoryAllocationL
 
         private static void BestFit()
         {
-            FreePartitionTable.Sort((a, b) => a.Size.CompareTo(b.Size));
+            var tmpList = FreePartitionTable.ToList();
+            tmpList.Sort((a, b) => a.Size.CompareTo(b.Size));
+            FreePartitionTable.Clear();
+            foreach (var partition in tmpList)
+            {
+                FreePartitionTable.AddLast(partition);
+            }
+
             ShowStatusOfMemory();
             while (true)
             {
@@ -84,24 +90,27 @@ namespace MemoryAllocationL
                         return;
                     }
 
-                    var index = -1;
-                    var fitness = int.MaxValue;
-                    var i = 0;
-                    foreach (var partition in FreePartitionTable)
+                    var flag = false;
+                    var node = FreePartitionTable.First;
+                    while(true)
                     {
-                        if (partition.Status == false && newJob <= partition.Size &&
-                            fitness >= partition.Size - newJob)
+                        if (node.Value.Status == false && newJob <= node.Value.Size)
                         {
-                            fitness = partition.Size - newJob;
-                            index = i;
+                            flag = true;
+                            break;
                         }
 
-                        i++;
+                        if (node.Next != null)
+                        {
+                            break;
+                        }
+
+                        node = node.Next;
                     }
 
-                    if (index != -1)
+                    if (flag)
                     {
-                        AllocateMemory(index);
+                        AllocateMemory(node);
                     }
                     else
                     {
@@ -141,28 +150,26 @@ namespace MemoryAllocationL
                         return;
                     }
 
-                    var index = nextSearchPoint;
-                    var i = 0;
+                    var pos = FreePartitionTable.First;
                     var can = false;
-                    while (i++ < FreePartitionTable.Count)
+                    while (true)
                     {
-                        if (FreePartitionTable[nextSearchPoint].Status ==
-                            false && FreePartitionTable[nextSearchPoint].Size >
-                            newJob)
+                        if (pos.Value.Status == false && pos.Value.Size > newJob)
                         {
                             can = true;
                             break;
                         }
-                        nextSearchPoint++;
-                        if (nextSearchPoint == FreePartitionTable.Count)
+                        if (pos.Next == null)
                         {
-                            nextSearchPoint = 0;
+                            break;
                         }
+
+                        pos = pos.Next;
                     }
 
                     if (can)
                     {
-                        AllocateMemory(index);
+                        AllocateMemory(pos);
                     }
                     else
                     {
@@ -186,55 +193,56 @@ namespace MemoryAllocationL
             }
         }
 
-        private static void AllocateMemory(int index)
+        private static void AllocateMemory(LinkedListNode<Partition> node)
         {
-            FreePartitionTable[index].Status = true;
-            TaskTable.Add(NumberOfTask++, FreePartitionTable[index].Start);
+            node.Value.Status = true;
+            TaskTable.Add(NumberOfTask++, node.Value.Start);
             ShowStatusOfMemory();
         }
 
         private static void RecyleMemory(int index)
         {
             var add = TaskTable[index];
-            var pos = -1;
+            LinkedListNode<Partition> pos = FreePartitionTable.First;
             var up = false;
             var down = false;
 
-            for (var i = 0; i < FreePartitionTable.Count; i++)
+            
+            for (var i = FreePartitionTable.First; i.Next != null; i = i.Next)
             {
-                if (FreePartitionTable[i].Start == add)
+                if (i.Value.Start == add)
                 {
                     pos = i;
                 }
             }
 
-            if (pos > 0 && FreePartitionTable[pos - 1].Status == false)
+            if (pos.Previous != null && pos.Previous.Value.Status == false)
             {
                 up = true;
             }
 
-            if (pos < FreePartitionTable.Count - 1 && FreePartitionTable[pos + 1].Status == false)
+            if (pos.Next != null && pos.Next.Value.Status == false)
             {
                 down = true;
             }
 
             if (up && down)
             {
-                FreePartitionTable[pos - 1].Size +=
-                    FreePartitionTable[pos].Size +
-                    FreePartitionTable[pos + 1].Size;
-                FreePartitionTable.RemoveAt(pos);
-                FreePartitionTable.RemoveAt(pos);
+                pos.Previous.Value.Size +=
+                    pos.Value.Size +
+                    pos.Next.Value.Size;
+                FreePartitionTable.Remove(pos);
+                FreePartitionTable.Remove(pos);
             }
             else if (up)
             {
-                FreePartitionTable[pos - 1].Size += FreePartitionTable[pos].Size;
-                FreePartitionTable.RemoveAt(pos);
+                pos.Previous.Value.Size += pos.Value.Size;
+                FreePartitionTable.Remove(pos);
             }
             else if (down)
             {
-                FreePartitionTable[pos].Size += FreePartitionTable[pos + 1].Size;
-                FreePartitionTable.RemoveAt(pos + 1);
+                pos.Value.Size += pos.Next.Value.Size;
+                FreePartitionTable.Remove(pos.Next);
             }
 
             TaskTable.Remove(index);
@@ -261,14 +269,13 @@ namespace MemoryAllocationL
             FreePartitionTable.Clear();
             TaskTable.Clear();
             NumberOfTask = 0;
-            nextSearchPoint = 0;
 
             var rd = new Random();
             var pos = 0;
             for (var i = 0; i < NumberOfParition; i++)
             {
                 var size = rd.Next(100) + MinSize;
-                FreePartitionTable.Add(new Partition(pos, size));
+                FreePartitionTable.AddLast(new LinkedListNode<Partition>(new Partition(pos, size)));
                 pos += size + 1;
             }
         }

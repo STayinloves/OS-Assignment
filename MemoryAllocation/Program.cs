@@ -141,7 +141,6 @@ namespace MemoryAllocation
                         return;
                     }
 
-                    var index = nextSearchPoint;
                     var i = 0;
                     var can = false;
                     while (i++ < FreePartitionTable.Count)
@@ -162,7 +161,7 @@ namespace MemoryAllocation
 
                     if (can)
                     {
-                        AllocateMemory(index);
+                        AllocateMemory(nextSearchPoint);
                     }
                     else
                     {
