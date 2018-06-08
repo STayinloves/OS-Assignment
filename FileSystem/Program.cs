@@ -14,7 +14,7 @@ namespace FileSystem
 
     internal class FileNode
     {
-        public FileNode(FileNode father, string name, PermissionType permission)
+        public FileNode(FileNode father, string name, PermissionType permission, bool isDir)
         {
             Father = father;
             Name = name;
@@ -22,10 +22,12 @@ namespace FileSystem
             ChildrenFiles = new Dictionary<string, FileNode>();
             Content = "";
 
-            ChildrenFiles.Add("..", father);
-            ChildrenFiles.Add(".", this);
+            if (isDir)
+            {
+                ChildrenFiles.Add("..", father);
+                ChildrenFiles.Add(".", this);
+            }
         }
-
 
         public string Name { get; set; }
         public string Content { get; set; }
@@ -36,7 +38,7 @@ namespace FileSystem
         public bool AddChildrenFile(string name)
         {
             var child = new FileNode(this, name,
-                PermissionType.Read | PermissionType.Write);
+                PermissionType.Read | PermissionType.Write, false);
             if (ChildrenFiles.ContainsKey(name))
             {
                 Console.WriteLine("File with the same filename exists!");
@@ -50,7 +52,7 @@ namespace FileSystem
         public bool AddChildrenDir(string name)
         {
             var child = new FileNode(this, name,
-                PermissionType.Read | PermissionType.Write | PermissionType.Excute);
+                PermissionType.Read | PermissionType.Write | PermissionType.Excute, true);
             if (ChildrenFiles.ContainsKey(name))
             {
                 Console.WriteLine("Dir with the same pathname exists!");
@@ -132,6 +134,8 @@ namespace FileSystem
             else if (name != newName)
             {
                 var node = ChildrenFiles[name];
+                node.Name = newName;
+
                 if ((node.Permission & PermissionType.Excute) != 0)
                 {
                     if (AddChildrenDir(newName))
@@ -308,12 +312,19 @@ namespace FileSystem
         private static readonly FileNode root =
             new FileNode(null, "",
                 PermissionType.Excute | PermissionType.Read |
-                PermissionType.Write);
+                PermissionType.Write, true);
 
         private static FileNode _current = root;
 
+        private static bool isLogin = false;
+
+        private static string username;
+
+        private static FileNode _currentFcb;
+
         private static void Main(string[] args)
         {
+            Login();
             // specially initialize root node
             root.ChildrenFiles[".."] = root;
 
@@ -334,8 +345,18 @@ namespace FileSystem
                         case "cd":
                             ChangeDirectory(input);
                             break;
+                        case "open":
+                            OpenFile(input);
+                            break;
+                        case "close":
+                            CloseFile(input);
+                            break;
                         case "cat":
+                        case "read":
                             CatenateFile(input);
+                            break;
+                        case "write":
+                            WriteFile(input);
                             break;
                         case "ls":
                         case "dir":
@@ -376,6 +397,42 @@ namespace FileSystem
             }
         }
 
+        private static void CloseFile(string[] input)
+        {
+            _currentFcb = null;
+        }
+
+        private static void WriteFile(string[] input)
+        {
+            if (_currentFcb == null)
+            {
+                Console.WriteLine("Please open a file first!");
+            }
+            else if ((_currentFcb.Permission & PermissionType.Write) == 0)
+            {
+                Console.WriteLine("You don't have a permission to write this file!");
+            }
+            else
+            {
+                Console.WriteLine("Please input something!");
+                var str = Console.ReadLine();
+                _currentFcb.Content = str;
+            }
+        }
+
+        private static void OpenFile(string[] input)
+        {
+            _currentFcb = _current.ChildrenFiles[input[1]];
+            Console.WriteLine("Successfully opened file " + input[1]);
+        }
+
+        private static void Login()
+        {
+            Console.Write("Please input your username: ");
+            username = Console.ReadLine();
+            Console.WriteLine("Login successful!");
+        }
+
         private static void ChangeDirectory(string[] param)
         {
             if (param[1].StartsWith("/"))
@@ -393,7 +450,21 @@ namespace FileSystem
 
         private static void CatenateFile(string[] param)
         {
-            _current.ShowChildContent(param[1]);
+            if (param.Length <= 1)
+            {
+                if (_currentFcb != null)
+                {
+                    _currentFcb.ShowContent();
+                }
+                else
+                {
+                    Console.WriteLine("Please open a file first!");
+                }
+            }
+            else
+            {
+                _current.ShowChildContent(param[1]);
+            }
         }
 
         private static void ListDirectory(string[] param)

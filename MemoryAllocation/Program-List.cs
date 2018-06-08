@@ -22,8 +22,7 @@ namespace MemoryAllocationL
     {
         private const int MinSize = 2;
 
-        public static LinkedList<Partition>
-            FreePartitionTable = new LinkedList<Partition>();
+        public static LinkedList<Partition> FreePartitionTable = new LinkedList<Partition>();
 
         public static int NumberOfParition;
 

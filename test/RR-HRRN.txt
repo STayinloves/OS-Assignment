@@ -1,0 +1,18 @@
+3
+3
+taskA 0 3
+taskB 1 2
+taskC 3 3
+
+10
+3
+taskA 0 3
+taskB 1 2
+taskC 3 3
+taskD 0 3
+taskE 1 2
+taskF 3 3
+taskG 0 3
+taskH 3 3
+taskI 9 3
+taskJ 10 3
